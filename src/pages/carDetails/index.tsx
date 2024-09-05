@@ -6,6 +6,9 @@ import { useParams } from "react-router-dom";
 import { db } from "../../services/firebaseConnection";
 import { doc, getDoc } from "firebase/firestore";
 
+import { Navigation, Pagination, Scrollbar, A11y } from "swiper/modules";
+import { Swiper, SwiperSlide } from "swiper/react";
+
 interface CarProps {
   id: string;
   name: string;
@@ -26,11 +29,13 @@ interface ImagesCarProps {
   uid: string;
   name: string;
   url: string;
+  map: Function;
 }
 
 export function CarDetails() {
   const { id } = useParams();
   const [car, setCar] = useState<CarProps>();
+  const [slidesPerView, setSlidesPerView] = useState<number>(2);
 
   useEffect(() => {
     async function loadCar() {
@@ -65,9 +70,45 @@ export function CarDetails() {
     loadCar();
   }, [id]);
 
+  useEffect(() => {
+    function handleResize() {
+      if (window.innerWidth < 720) {
+        setSlidesPerView(1);
+        return;
+      }
+      setSlidesPerView(2);
+    }
+
+    handleResize;
+
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+
   return (
     <Container>
-      <h1>Slider</h1>
+      <Swiper
+        modules={[Navigation, Pagination, Scrollbar, A11y]}
+        slidesPerView={slidesPerView}
+        pagination={{
+          clickable: true,
+        }}
+        navigation={true}
+        loop
+      >
+        {car?.images.map((img: ImagesCarProps) => (
+          <SwiperSlide key={img.uid}>
+            <img
+              src={img.url}
+              alt={img.name}
+              className="w-full h-96 object-cover"
+            />
+          </SwiperSlide>
+        ))}
+      </Swiper>
 
       {car && (
         <main className="w-full bg-white rounded-lg p-6 my-4">
