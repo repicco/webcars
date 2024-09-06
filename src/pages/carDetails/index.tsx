@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Container } from "../../components/container";
 import { FaWhatsapp } from "react-icons/fa";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 import { db } from "../../services/firebaseConnection";
 import { doc, getDoc } from "firebase/firestore";
@@ -33,6 +33,8 @@ interface ImagesCarProps {
 }
 
 export function CarDetails() {
+  const navigate = useNavigate();
+
   const { id } = useParams();
   const [car, setCar] = useState<CarProps>();
   const [slidesPerView, setSlidesPerView] = useState<number>(2);
@@ -46,6 +48,10 @@ export function CarDetails() {
       const docRef = doc(db, "cars", id);
       getDoc(docRef)
         .then((doc) => {
+          if (!doc.exists()) {
+            navigate("/");
+          }
+
           setCar({
             id: doc.id,
             name: doc.data()?.name,
@@ -90,25 +96,27 @@ export function CarDetails() {
 
   return (
     <Container>
-      <Swiper
-        modules={[Navigation, Pagination, Scrollbar, A11y]}
-        slidesPerView={slidesPerView}
-        pagination={{
-          clickable: true,
-        }}
-        navigation={true}
-        loop
-      >
-        {car?.images.map((img: ImagesCarProps) => (
-          <SwiperSlide key={img.uid}>
-            <img
-              src={img.url}
-              alt={img.name}
-              className="w-full h-96 object-cover"
-            />
-          </SwiperSlide>
-        ))}
-      </Swiper>
+      {car && (
+        <Swiper
+          modules={[Navigation, Pagination, Scrollbar, A11y]}
+          slidesPerView={slidesPerView}
+          pagination={{
+            clickable: true,
+          }}
+          navigation={true}
+          loop
+        >
+          {car?.images.map((img: ImagesCarProps) => (
+            <SwiperSlide key={img.uid}>
+              <img
+                src={img.url}
+                alt={img.name}
+                className="w-full h-96 object-cover"
+              />
+            </SwiperSlide>
+          ))}
+        </Swiper>
+      )}
 
       {car && (
         <main className="w-full bg-white rounded-lg p-6 my-4">
@@ -146,7 +154,8 @@ export function CarDetails() {
           <p className="mb-4">{car?.whatsapp}</p>
 
           <a
-            href="#"
+            href={`https://api.whatsapp.com/send?phone=${car?.whatsapp}&text=Olá vi esse ${car?.name} - ${car?.year} no site WebCarros e fiquei interessado.`}
+            target="_blank"
             className="cursor-pointer bg-green-500 w-full text-white flex items-center justify-center gap-2 my-6 h-11 text-xl rounded-lg font-medium"
           >
             Conversar com vendedor
