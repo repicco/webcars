@@ -127,7 +127,7 @@ export function CarNew() {
     const {name, model, whatsapp, city, year, km, price, description} = data
 
     const payload = {
-      name,
+      name: name.toUpperCase(),
       model,
       whatsapp,
       city,
@@ -138,8 +138,8 @@ export function CarNew() {
       created: new Date(),
       owner: user?.name,
       uid: user?.uid,
-      images: carListImages
-    }
+      images: carListImages,
+    };
 
     addDoc(collection(db, 'cars'), payload)
     .then(() => {
