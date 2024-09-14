@@ -20,6 +20,8 @@ import {
 } from "firebase/storage";
 import { addDoc, collection } from "firebase/firestore";
 
+import { toast } from "react-hot-toast";
+
 const schema = z.object({
   name: z.string().min(1, "O campo nome é obrigatório"),
   model: z.string().min(1, "O modelo é obrigatório"),
@@ -67,7 +69,7 @@ export function CarNew() {
       if (file.type === "image/jpeg" || file.type === "image/png") {
         await handleUpload(file);
       } else {
-        alert("Arquivo não suportado");
+        toast.error("Arquivo não suportado");
         return;
       }
     }
@@ -92,39 +94,41 @@ export function CarNew() {
           };
 
           setCarImages((images) => [...images, imageItem]);
+          toast.success("Imagem cadastrada...");
         });
       })
       .catch((error) => {
-        console.log(error);
+        toast.error("Falha ao cadastrar a imagem...");
       });
   }
 
-  async function handleDeleteImage(item :ImageItensProps){
-    const imagePath = `images/${item.uid}/${item.name}`
+  async function handleDeleteImage(item: ImageItensProps) {
+    const imagePath = `images/${item.uid}/${item.name}`;
 
-    const imageRef = ref(storage, imagePath)
+    const imageRef = ref(storage, imagePath);
 
     try {
-      await deleteObject(imageRef)
-      setCarImages(images => images.filter(car => car.url !== item.url))
+      await deleteObject(imageRef);
+      setCarImages((images) => images.filter((car) => car.url !== item.url));
+      toast.success("Imagem deletada!");
     } catch (error) {
-      console.warn('Erro ao deletar...')   
+      toast.error("Erro ao deletar...");
     }
   }
 
   function submit(data: FormData) {
-    if(carImages.length === 0){
-      alert('Envie uma imagem para esse carro')
-      return
+    if (carImages.length === 0) {
+      toast.error("Envie ao menos 1 imagem...");
+      return;
     }
-    
-    const carListImages = carImages.map(car => ({
+
+    const carListImages = carImages.map((car) => ({
       uid: car.uid,
       name: car.name,
-      url: car.url
-    }))
+      url: car.url,
+    }));
 
-    const {name, model, whatsapp, city, year, km, price, description} = data
+    const { name, model, whatsapp, city, year, km, price, description } = data;
 
     const payload = {
       name: name.toUpperCase(),
@@ -141,18 +145,18 @@ export function CarNew() {
       images: carListImages,
     };
 
-    addDoc(collection(db, 'cars'), payload)
-    .then(() => {
-      reset();
-      setCarImages([])
-      console.info('Cadastrado com sucesso.')
-    })
-    .catch(err => console.warn('Erro ao cadastrar '+ err))
-
-    
+    addDoc(collection(db, "cars"), payload)
+      .then(() => {
+        reset();
+        setCarImages([]);
+        console.info("Cadastrado com sucesso.");
+        toast.success("Carro cadastrado com sucesso!");
+      })
+      .catch((err) => {
+        toast.error("Erro ao cadastar o carro");
+        console.warn("Erro ao cadastrar " + err);
+      });
   }
-
-
 
   return (
     <Container>
@@ -174,9 +178,12 @@ export function CarNew() {
         </button>
 
         {carImages.map((el) => (
-          <div key={el.name} className="w-full h-32 flex items-center justify-center relative">
+          <div
+            key={el.name}
+            className="w-full h-32 flex items-center justify-center relative"
+          >
             <button className="absolute" onClick={() => handleDeleteImage(el)}>
-              <TbTrash size={28} color="white"/>
+              <TbTrash size={28} color="white" />
             </button>
             <img
               src={el.previewUrl}

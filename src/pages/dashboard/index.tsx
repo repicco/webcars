@@ -8,6 +8,8 @@ import { db, storage } from "../../services/firebaseConnection"
 import { ref, deleteObject } from "firebase/storage"
 import { AuthContext } from "../../contexts/AuthContext"
 
+import { toast } from "react-hot-toast";
+
 interface ImageCarProps {
     name: string;
     uid: string;
@@ -74,8 +76,10 @@ export function Dashboard() {
             try {
                 await deleteObject(imageRef)
                 setCars(cars.filter((item) => item.id !== car.id))
+                toast.success("Anúncio excluído com sucesso!");
             } catch (error) {
-                console.log('Erro ao excluir a imagem', error)
+                toast.success("Erro ao excluir o anúncio...");
+                console.log("Erro ao excluir o anúncio", error);
             }
         })
 
